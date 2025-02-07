@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -14,9 +15,7 @@ public class FindPriceUseCase {
 
     private final PriceRepository priceRepository;
 
-    public Optional<Price> getApplicablePrice(Integer productId, Integer brandId, LocalDateTime date) {
-        return priceRepository.findApplicablePrices(productId, brandId, date)
-                .stream()
-                .findFirst(); // Obtiene el de mayor prioridad
+    public List<Price> getPrices(Integer productId, Integer brandId, LocalDateTime date) {
+        return priceRepository.findPrices(productId, brandId, date);
     }
 }

@@ -6,10 +6,14 @@ import com.store.pricing_service.infrastructure.dto.PriceResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/prices")
@@ -19,14 +23,15 @@ public class PriceController {
     private final FindPriceUseCase findPriceUseCase;
 
     @GetMapping
-    public ResponseEntity<PriceResponseDTO> getPrice(
-            @RequestParam("date") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") LocalDateTime date,
-            @RequestParam("productId") Integer productId,
-            @RequestParam("brandId") Integer brandId) {
+    public ResponseEntity<List<PriceResponseDTO>> getPrices(
+            @RequestParam(value = "date", required = false)
+            @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") LocalDateTime date,
+            @RequestParam(value = "productId", required = false) Integer productId,
+            @RequestParam(value = "brandId", required = false) Integer brandId) {
 
-        Optional<Price> priceOptional = findPriceUseCase.getApplicablePrice(productId, brandId, date);
+        List<Price> prices = findPriceUseCase.getPrices(productId, brandId, date);
 
-        return priceOptional.map(price -> ResponseEntity.ok(
+        List<PriceResponseDTO> response = prices.stream().map(price ->
                 PriceResponseDTO.builder()
                         .productId(price.getProductId())
                         .brandId(price.getBrandId())
@@ -35,6 +40,8 @@ public class PriceController {
                         .endDate(price.getEndDate())
                         .price(price.getPrice())
                         .build()
-        )).orElse(ResponseEntity.notFound().build());
+        ).collect(Collectors.toList());
+
+        return ResponseEntity.ok(response);
     }
 }
